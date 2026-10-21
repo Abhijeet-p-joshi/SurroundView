@@ -1,30 +1,88 @@
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QAction
 from PySide6.QtWidgets import (
     QMainWindow,
-    QLabel,
     QWidget,
-    QVBoxLayout
+    QVBoxLayout,
+    QHBoxLayout,
+    QLabel,
+    QFrame,
+    QSplitter
 )
+from visualization.surround_view_widget import SurroundViewWidget
+from gui.control_panel import ControlPanel
+from controllers import SurroundViewController
 
 
 class MainWindow(QMainWindow):
+
     def __init__(self):
         super().__init__()
 
         self.setWindowTitle("SurroundView")
-        self.resize(1200, 800)
-
+        self.resize(1400, 900)
+        self._create_menu()
         self._create_ui()
+        self._create_toolbar()
 
     def _create_ui(self):
-        central_widget = QWidget()
 
-        layout = QVBoxLayout()
+        splitter = QSplitter(Qt.Horizontal)
 
-        label = QLabel("SurroundView")
-        layout.addWidget(label)
+        right_panel = self._create_visualization_panel()
+        self.controller = SurroundViewController(
+            self.surround_view
+        )
+        left_panel = self._create_control_panel()
 
-        central_widget.setLayout(layout)
+        splitter.addWidget(left_panel)
+        splitter.addWidget(right_panel)
 
-        self.setCentralWidget(central_widget)
+        splitter.setSizes([300, 1100])
+
+        self.setCentralWidget(splitter)
 
         self.statusBar().showMessage("Ready")
+
+    def _create_control_panel(self):
+
+        self.control_panel = ControlPanel()
+
+        self.control_panel.apply_clicked.connect(
+            self.controller.update_objects
+        )
+
+        return self.control_panel
+
+    def _create_visualization_panel(self):
+
+        panel = QFrame()
+        panel.setFrameShape(QFrame.StyledPanel)
+
+        layout = QVBoxLayout(panel)
+
+        self.surround_view = SurroundViewWidget()
+
+        layout.addWidget(self.surround_view)
+
+        return panel
+
+    def _create_menu(self):
+
+        file_menu = self.menuBar().addMenu("File")
+
+        view_menu = self.menuBar().addMenu("View")
+
+        tools_menu = self.menuBar().addMenu("Tools")
+
+        help_menu = self.menuBar().addMenu("Help")
+
+    def _create_toolbar(self):
+
+        toolbar = self.addToolBar("Main Toolbar")
+
+        start_action = QAction("Start", self)
+        stop_action = QAction("Stop", self)
+
+        toolbar.addAction(start_action)
+        toolbar.addAction(stop_action)
