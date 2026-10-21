@@ -1,7 +1,9 @@
-from enum import Enum
+from enum import IntEnum
+class ObjectType(IntEnum):
+    CAR = 0
+    BIKE = 1
+    TRUCK = 2
 
-
-class ObjectType(Enum):
-    CAR = "Car"
-    BIKE = "Bike"
-    TRUCK = "Truck"
+    @property
+    def display_name(self):
+        return self.name.capitalize()

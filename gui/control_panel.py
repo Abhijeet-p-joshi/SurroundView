@@ -12,6 +12,7 @@ from PySide6.QtWidgets import (
 
 from models import DetectedObject, ObjectType
 from config.constants import X_MIN, X_MAX, Y_MIN, Y_MAX
+from gui.object_slot_widget import ObjectSlotWidget
 
 
 class ControlPanel(QWidget):
@@ -20,46 +21,22 @@ class ControlPanel(QWidget):
 
     def __init__(self):
         super().__init__()
-
+        self.object_slots = []
         self._create_ui()
 
     def _create_ui(self):
 
         main_layout = QVBoxLayout(self)
 
-        self.car_x = self._create_x_spinbox()
-        self.car_y = self._create_y_spinbox()
+        for slot in range(1, 4):
 
-        self.bike_x = self._create_x_spinbox()
-        self.bike_y = self._create_y_spinbox()
+            widget = ObjectSlotWidget(slot)
 
-        self.truck_x = self._create_x_spinbox()
-        self.truck_y = self._create_y_spinbox()
+            self.object_slots.append(widget)
 
-        main_layout.addWidget(
-            self._create_group(
-                "Car",
-                self.car_x,
-                self.car_y
-            )
-        )
+            main_layout.addWidget(widget)
 
-        main_layout.addWidget(
-            self._create_group(
-                "Bike",
-                self.bike_x,
-                self.bike_y
-            )
-        )
-
-        main_layout.addWidget(
-            self._create_group(
-                "Truck",
-                self.truck_x,
-                self.truck_y
-            )
-        )
-
+        # Buttons
         self.apply_button = QPushButton("Apply")
         self.reset_button = QPushButton("Reset")
 
@@ -108,26 +85,24 @@ class ControlPanel(QWidget):
 
     def apply(self):
 
-        objects = [
+        objects = []
 
-            DetectedObject(
-                ObjectType.CAR,
-                self.car_x.value(),
-                self.car_y.value()
-            ),
+        for widget in self.object_slots:
 
-            DetectedObject(
-                ObjectType.BIKE,
-                self.bike_x.value(),
-                self.bike_y.value()
-            ),
+            objects.append(
 
-            DetectedObject(
-                ObjectType.TRUCK,
-                self.truck_x.value(),
-                self.truck_y.value()
+                DetectedObject(
+
+                    slot=widget.slot_number,
+
+                    object_type=widget.type_combo.currentData(),
+
+                    x=widget.x_spin.value(),
+
+                    y=widget.y_spin.value()
+
+                )
+
             )
-
-        ]
 
         self.apply_clicked.emit(objects)

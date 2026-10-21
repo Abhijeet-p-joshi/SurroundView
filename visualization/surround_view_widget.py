@@ -29,20 +29,23 @@ class SurroundViewWidget(QWidget):
 
         self.update_objects([
             DetectedObject(
+                slot=1,
                 object_type=ObjectType.CAR,
                 x=4000,
                 y=120
             ),
             DetectedObject(
+                slot=2,
                 object_type=ObjectType.BIKE,
                 x=1800,
                 y=-80
             ),
             DetectedObject(
+                slot=3,
                 object_type=ObjectType.TRUCK,
                 x=9500,
                 y=250
-            ),
+            )
         ])
 
     def _setup_plot(self):
@@ -57,14 +60,12 @@ class SurroundViewWidget(QWidget):
         self.plot.setXRange(X_MIN, X_MAX)
         self.plot.setYRange(Y_MIN, Y_MAX)
 
-    def update_objects(self, objects):
-
-        spots = []
+    def update_objects(self, objects: list[DetectedObject]):
 
         symbol_map = {
-            ObjectType.CAR: "s",
-            ObjectType.BIKE: "t",
-            ObjectType.TRUCK: "d",
+            ObjectType.CAR: "s",      # Square
+            ObjectType.BIKE: "t",     # Triangle
+            ObjectType.TRUCK: "d",    # Diamond
         }
 
         color_map = {
@@ -72,6 +73,8 @@ class SurroundViewWidget(QWidget):
             ObjectType.BIKE: "g",
             ObjectType.TRUCK: "r",
         }
+
+        spots = []
 
         for obj in objects:
 
