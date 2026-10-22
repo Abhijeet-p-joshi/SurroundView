@@ -68,7 +68,6 @@ class BatchProcessor:
         if self.collecting and update_bit:
 
             self.buffer.add_objects(objects)
-
             self.slot_index += 1
 
             print(
@@ -116,3 +115,10 @@ class BatchProcessor:
         self.slot_index = 0
 
         self.previous_update_bit = False
+
+    def current_update(self):
+        """
+        Returns the current replay update index (0..5).
+        """
+
+        return self.slot_index

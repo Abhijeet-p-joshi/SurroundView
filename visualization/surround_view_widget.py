@@ -181,7 +181,7 @@ class SurroundViewWidget(QWidget):
         for obj in objects:
 
             text = pg.TextItem(
-                text=f"{obj.object_type.name.title()} ({obj.slot})",
+                text=f"#{obj.slot} {obj.object_type.name.title()}",
                 anchor=(0, 1)
             )
 

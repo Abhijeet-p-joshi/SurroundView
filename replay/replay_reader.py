@@ -55,5 +55,4 @@ class ReplayReader(QObject):
         )
 
         if completed_batch is not None:
-
             self.batch_ready.emit(completed_batch)
