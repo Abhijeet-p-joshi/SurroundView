@@ -1,5 +1,13 @@
 import win32com.client
 from canoe.signal_mapping import SIGNALS
+from canoe.signal_map import (
+    UPDATE_BIT,
+    OBJECT_SIGNALS,
+    BATCH_COUNTER
+)
+from models import DetectedObject, ObjectType
+from config.object_types import OBJECT_TYPE_MAP, ECU_OBJECT_TYPE_MAP
+from config.replay_config import OBJECTS_PER_UPDATE
 
 class CANoeInterface:
     """
@@ -47,12 +55,27 @@ class CANoeInterface:
 
         return self.signal_cache[short_name]
 
-    def read_signal(self, short_name):
+    def read_update_bit(self):
+
+        value = self.read_signal(UPDATE_BIT)
+
+        if value is None:
+            return False
+
+        return bool(value)
+
+    def read_signal(self, full_signal_name):
         """
-        Read a signal value from CANoe.
+        Reads a CANoe signal using its FullSignalName.
         """
 
-        return self.get_signal(short_name).Value
+        try:
+            signal = self.canoe.Signals.Item(full_signal_name)
+            return signal.Value
+
+        except Exception as e:
+            print(f"Failed to read {full_signal_name}: {e}")
+            return None
 
     def write_signal(self, short_name, value):
         """
@@ -65,9 +88,81 @@ class CANoeInterface:
         """
         Writes one detected object to CANoe.
         """
+        signal_set = next(
+            signal
+            for signal in OBJECT_SIGNALS
+            if signal.slot == obj.slot
+        )
 
-        mapping = SIGNALS[obj.slot]
+        self.write_signal(
+            signal_set.x,
+            obj.x
+        )
+        self.write_signal(
+            signal_set.y,
+            obj.y
+        )
+        self.write_signal(
+            signal_set.obj_type,
+            ECU_OBJECT_TYPE_MAP[obj.object_type]
+        )
 
-        self.write_signal(mapping["x"], obj.x)
-        self.write_signal(mapping["y"], obj.y)
-        self.write_signal(mapping["type"], int(obj.object_type.value))
+    def decode_object_type(self, value):
+        """
+        Converts ECU object type value to ObjectType enum.
+        """
+
+        return OBJECT_TYPE_MAP.get(value, ObjectType.CAR)
+
+    def read_current_objects(self):
+        """
+        Reads one replay update from CANoe.
+        One replay update contains OBJECTS_PER_UPDATE objects.
+        """
+
+        objects = []
+
+        for signal_set in OBJECT_SIGNALS[:OBJECTS_PER_UPDATE]:
+
+            x = self.read_signal(signal_set.x)
+            y = self.read_signal(signal_set.y)
+            obj_type = self.read_signal(signal_set.obj_type)
+
+            obj = DetectedObject(
+                slot=signal_set.slot,
+                object_type=self.decode_object_type(obj_type),
+                x=x,
+                y=y,
+            )
+
+            objects.append(obj)
+
+        return objects
+
+    def read_batch_counter(self):
+        """
+        Reads the current batch counter (0..15).
+        """
+
+        value = self.read_signal(BATCH_COUNTER)
+
+        if value is None:
+            return 0
+
+        return int(value)
+
+#Temporary
+    def debug_print_objects(self):
+
+        objects = self.read_current_objects()
+
+        print("--------------------------------")
+
+        for obj in objects:
+
+            print(
+                obj.slot,
+                obj.object_type,
+                obj.x,
+                obj.y
+            )

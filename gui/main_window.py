@@ -12,6 +12,7 @@ from PySide6.QtWidgets import (
 from visualization.surround_view_widget import SurroundViewWidget
 from gui.control_panel import ControlPanel
 from controllers import SurroundViewController
+from replay import ReplayController
 
 
 class MainWindow(QMainWindow):
@@ -33,6 +34,19 @@ class MainWindow(QMainWindow):
         self.controller = SurroundViewController(
             self.surround_view
         )
+
+        self.replay_controller = ReplayController()
+        self.replay_controller.batch_updated.connect(
+            self.surround_view.update_objects
+        )
+        self.replay_controller.status_changed.connect(
+            self.statusBar().showMessage
+        )
+
+        self.surround_view.objectMoved.connect(
+            self.controller.object_dragged
+        )
+
         left_panel = self._create_control_panel()
 
         splitter.addWidget(left_panel)
@@ -81,8 +95,16 @@ class MainWindow(QMainWindow):
 
         toolbar = self.addToolBar("Main Toolbar")
 
-        start_action = QAction("Start", self)
-        stop_action = QAction("Stop", self)
+        start_action = QAction("Start Replay", self)
+        stop_action = QAction("Stop Replay", self)
+
+        start_action.triggered.connect(
+            self.replay_controller.start
+        )
+
+        stop_action.triggered.connect(
+            self.replay_controller.stop
+        )
 
         toolbar.addAction(start_action)
         toolbar.addAction(stop_action)

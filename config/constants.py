@@ -1,8 +1,8 @@
 X_MIN = 0
 X_MAX = 13000
 
-Y_MIN = -300
-Y_MAX = 300
+Y_MIN = -1000
+Y_MAX = 1000
 
-EGO_LENGTH = 4.5      # meters (visual only for now)
-EGO_WIDTH = 2.0
+EGO_LENGTH = 100
+EGO_WIDTH = 100

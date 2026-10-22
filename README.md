@@ -100,3 +100,34 @@ When you press Apply, the controller will:
             │             │
             ▼             ▼
  Visualization       CANoe (later)
+
+
+ # Final implementation
+
+                 +-----------------------------+
+                |      Python GUI             |
+                | (PySide6 + PyQtGraph)       |
+                +--------------+--------------+
+                               |
+                               | Apply
+                               |
+                               ▼
+                    SurroundViewController
+                               |
+                 +-------------+-------------+
+                 |                           |
+                 ▼                           ▼
+         Visualization                CANoe Interface
+         (PyQtGraph)                     (COM API)
+                 |                           |
+                 |                           ▼
+                 |                  Symbolic Signals
+                 |                           |
+                 ▼                           ▼
+            2D Display             FlexRay Database Signals
+                                           |
+                                           ▼
+                                        VN8914
+                                           |
+                                           ▼
+                                          ECU
