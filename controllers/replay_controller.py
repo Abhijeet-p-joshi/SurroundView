@@ -1,98 +1,102 @@
-from PySide6.QtCore import QObject, Signal
+from PySide6.QtCore import QObject, Signal, QTimer
 
-from replay.replay_reader import ReplayReader
+from canoe.canoe_interface import CANoeInterface
+from controllers.visualization_controller import VisualizationController
 
 
 class ReplayController(QObject):
     """
-    Controls CANoe replay.
+    Controls Replay Mode.
 
     Responsibilities
     ----------------
-    - Starts replay polling
-    - Stops replay polling
-    - Emits completed replay batches
-    - Reports replay status
-
-    Does NOT know anything about:
-        - GUI
-        - Visualization
-        - CANoe signals
+    - Start replay
+    - Stop replay
+    - Read object batches from CANoe
+    - Update the visualization
     """
 
-    batch_updated = Signal(list)
     status_changed = Signal(str)
 
-    def __init__(self):
+    replay_started = Signal()
+
+    replay_stopped = Signal()
+
+    batch_updated = Signal(list)
+
+    REPLAY_PERIOD_MS = 80
+
+    def __init__(
+        self,
+        visualization: VisualizationController,
+    ):
 
         super().__init__()
 
-        self.reader = ReplayReader()
+        self.visualization = visualization
 
-        self.reader.batch_ready.connect(
-            self._batch_received
+        self.canoe = CANoeInterface()
+
+        self.timer = QTimer()
+
+        self.timer.timeout.connect(
+            self._update_cycle
         )
 
         self.running = False
 
-        self.batch_counter = 0
-
-    # -----------------------------------------------------
-    # Public API
-    # -----------------------------------------------------
+    # ---------------------------------------------------------
 
     def start(self):
 
         if self.running:
             return
 
-        self.batch_counter = 0
-
-        self.reader.start()
-
         self.running = True
+
+        self.timer.start(
+            self.REPLAY_PERIOD_MS
+        )
+
+        self.replay_started.emit()
 
         self.status_changed.emit(
             "Replay Started"
         )
 
-    # -----------------------------------------------------
+    # ---------------------------------------------------------
 
     def stop(self):
 
         if not self.running:
             return
 
-        self.reader.stop()
-
         self.running = False
+
+        self.timer.stop()
+
+        self.replay_stopped.emit()
 
         self.status_changed.emit(
             "Replay Stopped"
         )
 
-    # -----------------------------------------------------
+    # ---------------------------------------------------------
+
+    def _update_cycle(self):
+
+        objects = self.canoe.read_current_objects()
+
+        self.visualization.show_objects(
+            objects
+        )
+
+        self.batch_updated.emit(
+            objects
+        )
+
+    # ---------------------------------------------------------
 
     def is_running(self):
 
         return self.running
-
-    # -----------------------------------------------------
-
-    def batch_count(self):
-
-        return self.batch_counter
-
-    # -----------------------------------------------------
-    # Internal
-    # -----------------------------------------------------
-
-    def _batch_received(self, objects):
-
-        self.batch_counter += 1
-
-        print(
-            f"Replay Batch {self.batch_counter}"
-        )
-
-        self.batch_updated.emit(objects)
