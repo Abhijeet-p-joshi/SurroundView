@@ -6,7 +6,7 @@ from canoe.signal_map import (
     BATCH_COUNTER
 )
 from models import DetectedObject, ObjectType
-from config.object_types import OBJECT_TYPE_MAP, ECU_OBJECT_TYPE_MAP
+from config.object_types import OBJECT_TYPE_MAP
 from config.replay_config import OBJECTS_PER_UPDATE
 
 class CANoeInterface:
@@ -15,15 +15,13 @@ class CANoeInterface:
     """
 
     def __init__(self):
-        print("CANoeInterface constructor called")
         
         self.canoe = win32com.client.gencache.EnsureDispatch(
             "CANoe.Application"
         )
-
         if not self.canoe.Measurement.Running:
             raise RuntimeError("CANoe Measurement is not running.")
-
+        
         # Cache signal COM objects
         self.signal_cache = {}
 
@@ -41,13 +39,12 @@ class CANoeInterface:
             self.get_signal(mapping["type"])
 
     def get_signal(self, short_name):
-        """
-        Returns a cached CANoe Signal object.
-        """
 
         if short_name not in self.signal_cache:
 
             full_name = self.canoe.Signals.FullSignalName(short_name)
+
+            print(f"{short_name}  ->  {full_name}")
 
             signal = self.canoe.Signals.Item(full_name)
 
@@ -77,34 +74,65 @@ class CANoeInterface:
             print(f"Failed to read {full_signal_name}: {e}")
             return None
 
-    def write_signal(self, short_name, value):
+    def write_signal(self, full_signal_name: str, value):
         """
-        Write a signal value to CANoe.
+        Writes a CANoe signal using its FullSignalName.
         """
+        try:
+            signal = self.canoe.Signals.Item(full_signal_name)
+            signal.Value = value
+        except Exception as e:
+            print(
+                f"Failed to write {full_signal_name}: {e}"
+            )
 
-        self.get_signal(short_name).Value = value
-
-    def write_object(self, obj):
-        """
-        Writes one detected object to CANoe.
-        """
-        signal_set = next(
-            signal
-            for signal in OBJECT_SIGNALS
-            if signal.slot == obj.slot
+    def write_update_bit(self, value: bool):
+        self.write_signal(
+            UPDATE_BIT,
+            int(value)
         )
+
+    def write_object(
+        self,
+        signal_group: int,
+        obj: DetectedObject,
+    ):
+        """
+        Writes one object into one of the three
+        physical CANoe object signal groups.
+
+        signal_group:
+            0
+            1
+            2
+        """
+        print(
+            f"type={obj.object_type.name} "
+            f"x={obj.x} "
+            f"y={obj.y}"
+        )
+
+        signal_set = OBJECT_SIGNALS[signal_group]
 
         self.write_signal(
             signal_set.x,
-            obj.x
+            obj.x,
         )
+
         self.write_signal(
             signal_set.y,
-            obj.y
+            obj.y,
         )
+
         self.write_signal(
             signal_set.obj_type,
-            ECU_OBJECT_TYPE_MAP[obj.object_type]
+            obj.object_type.value,
+        )
+
+        print(
+            f"type={obj.object_type.name} "
+            f"x={obj.x} "
+            f"y={obj.y}"
         )
 
     def decode_object_type(self, value):

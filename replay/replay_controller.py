@@ -1,6 +1,7 @@
 from PySide6.QtCore import QObject, Signal
 
 from replay.replay_reader import ReplayReader
+from replay.replay_frame_builder import ReplayFrameBuilder
 
 
 class ReplayController(QObject):
@@ -23,6 +24,7 @@ class ReplayController(QObject):
 
         self.running = False
         self.batch_count = 0
+        self.frame_builder = ReplayFrameBuilder()
 
     def start(self):
 
@@ -53,10 +55,17 @@ class ReplayController(QObject):
         )
 
     def _on_batch_ready(self, objects):
+        """
+        Receives one completed replay batch (18 DetectedObjects)
+        from the ReplayReader, converts it into a logical replay
+        frame and forwards it to the visualization.
+        """
 
         self.batch_count += 1
 
-        self.batch_updated.emit(objects)
+        frame = self.frame_builder.build(objects)
+
+        self.batch_updated.emit(frame)
 
     def is_running(self):
 

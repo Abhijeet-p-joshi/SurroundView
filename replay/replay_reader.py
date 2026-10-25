@@ -43,11 +43,38 @@ class ReplayReader(QObject):
 
         self.processor.reset()
 
+    # def poll(self):
+    #     print("Polling...")
+    #     update_bit = self.canoe.read_update_bit()
+
+    #     objects = self.canoe.read_current_objects()
+
+    #     completed_batch = self.processor.process(
+    #         update_bit,
+    #         objects
+    #     )
+
+    #     if completed_batch is not None:
+    #         self.batch_ready.emit(completed_batch)
+
     def poll(self):
+
+        print("\n==============================")
 
         update_bit = self.canoe.read_update_bit()
 
+        print(f"Update Bit : {update_bit}")
+
         objects = self.canoe.read_current_objects()
+
+        for obj in objects:
+
+            print(
+                f"Slot={obj.slot} "
+                f"Type={obj.object_type.name} "
+                f"X={obj.x} "
+                f"Y={obj.y}"
+            )
 
         completed_batch = self.processor.process(
             update_bit,
@@ -55,4 +82,7 @@ class ReplayReader(QObject):
         )
 
         if completed_batch is not None:
+
+            print(f"Batch Ready : {len(completed_batch)} objects")
+
             self.batch_ready.emit(completed_batch)
