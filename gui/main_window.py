@@ -42,20 +42,15 @@ class MainWindow(QMainWindow):
         super().__init__()
 
         self.preview_mode = preview_mode
-
         self.setWindowTitle("SurroundView")
-
         self.resize(1500, 900)
-
         self._create_ui()
-
         self._create_controllers()
-
-        if not self.preview_mode:
-            self._connect_signals()
-            self.statusBar().showMessage("Ready")
-        else:
+        self._connect_signals() # GUI always works
+        if self.preview_mode:
             self.statusBar().showMessage("Preview Mode")
+        else:
+            self.statusBar().showMessage("Ready")
 
     # ---------------------------------------------------------
     # UI
@@ -119,8 +114,8 @@ class MainWindow(QMainWindow):
 
         splitter.setSizes(
             [
-                450,
-                550,
+                700,
+                700,
             ]
         )
 
@@ -138,15 +133,14 @@ class MainWindow(QMainWindow):
             self.surround_view
         )
 
-        if self.preview_mode:
-            return
-
         self.replay_controller = ReplayController(
-            self.visualization_controller
+            self.visualization_controller,
+            preview_mode=self.preview_mode,
         )
 
         self.injection_controller = InjectionController(
-            self.visualization_controller
+            self.visualization_controller,
+            preview_mode=self.preview_mode,
         )
 
     # ---------------------------------------------------------
@@ -178,6 +172,9 @@ class MainWindow(QMainWindow):
 
         # Apply Scenario
         self.inject_tab.scenarioApplied.connect(
+            lambda scenario: print("MainWindow received scenario")
+        )
+        self.inject_tab.scenarioApplied.connect(
             self.injection_controller.apply_scenario
         )
 
@@ -203,35 +200,35 @@ class MainWindow(QMainWindow):
             self.statusBar().showMessage
         )
 
-        # ---------------------------------------------------------
-        # Mode Switching
-        # ---------------------------------------------------------
+    # ---------------------------------------------------------
+    # Mode Switching
+    # ---------------------------------------------------------
 
-        def start_replay(self):
-            """
-            Starts Replay mode.
+    def start_replay(self):
+        """
+        Starts Replay mode.
 
-            If Injection is running, stop it first.
-            """
+        If Injection is running, stop it first.
+        """
 
-            if self.injection_controller.is_running():
+        if self.injection_controller.is_running():
 
-                self.injection_controller.stop()
+            self.injection_controller.stop()
 
-            self.replay_controller.start()
+        self.replay_controller.start()
 
 
-        # ---------------------------------------------------------
+    # ---------------------------------------------------------
 
-        def start_injection(self):
-            """
-            Starts Injection mode.
+    def start_injection(self):
+        """
+        Starts Injection mode.
 
-            If Replay is running, stop it first.
-            """
+        If Replay is running, stop it first.
+        """
 
-            if self.replay_controller.is_running():
+        if self.replay_controller.is_running():
 
-                self.replay_controller.stop()
+            self.replay_controller.stop()
 
-            self.injection_controller.start()
+        self.injection_controller.start()

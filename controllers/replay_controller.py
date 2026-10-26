@@ -1,6 +1,8 @@
 from PySide6.QtCore import QObject, Signal, QTimer
 
 from canoe.canoe_interface import CANoeInterface
+from canoe.preview_canoe_interface import PreviewCANoeInterface
+
 from controllers.visualization_controller import VisualizationController
 
 
@@ -28,21 +30,20 @@ class ReplayController(QObject):
 
     def __init__(
         self,
-        visualization: VisualizationController,
+        visualization,
+        preview_mode=False,
     ):
-
         super().__init__()
 
         self.visualization = visualization
-
-        self.canoe = CANoeInterface()
-
+        if preview_mode:
+            self.canoe = PreviewCANoeInterface()
+        else:
+            self.canoe = CANoeInterface()
         self.timer = QTimer()
-
         self.timer.timeout.connect(
             self._update_cycle
         )
-
         self.running = False
 
     # ---------------------------------------------------------

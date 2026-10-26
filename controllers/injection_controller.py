@@ -1,6 +1,7 @@
 from PySide6.QtCore import QObject, Signal
 
 from canoe.canoe_interface import CANoeInterface
+from canoe.preview_canoe_interface import PreviewCANoeInterface
 
 from controllers.visualization_controller import VisualizationController
 
@@ -30,18 +31,20 @@ class InjectionController(QObject):
 
     def __init__(
         self,
-        visualization: VisualizationController,
+        visualization,
+        preview_mode=False,
     ):
-
         super().__init__()
-
         self.visualization = visualization
 
         #
         # Backend
         #
 
-        self.canoe = CANoeInterface()
+        if preview_mode:
+            self.canoe = PreviewCANoeInterface()
+        else:
+            self.canoe = CANoeInterface()
 
         self.buffer = ScenarioBuffer()
 
@@ -67,6 +70,9 @@ class InjectionController(QObject):
         """
         Called when Apply Scenario is pressed.
         """
+        print("\n========== InjectionController ==========")
+        print("apply_scenario() called")
+        print("Objects:", scenario.object_count())
 
         if scenario is None:
             return
@@ -80,17 +86,16 @@ class InjectionController(QObject):
             return
 
         # Store scenario
-        self.buffer.set_scenario(
-            scenario
-        )
+        self.buffer.set_scenario(scenario)
 
         # Update visualization immediately
-        self.visualization.show_objects(
-            scenario.sorted_objects()
-        )
+        self.visualization.show_objects(scenario.sorted_objects())
         self.status_changed.emit(
             f"Scenario Applied ({scenario.object_count()} objects)"
         )
+
+        print("InjectionController.apply_scenario()")
+        print("Objects:", scenario.object_count())
 
     # ---------------------------------------------------------
     # Injection

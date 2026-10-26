@@ -43,6 +43,9 @@ class VisualizationController(QObject):
             self._objects
         )
 
+        print("VisualizationController")
+        print(len(objects))
+
     # ---------------------------------------------------------
 
     def clear(self):

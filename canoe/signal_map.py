@@ -23,6 +23,10 @@ UPDATE_BIT = (
     PDU + "SurroundObj_UB"
 )
 
+SURROUNDOBJ_UB_CONTROL = (
+    "ASDM::Backbone::Signals::Control::UB::SurroundObj_UB_Control"
+)
+
 BATCH_COUNTER = (
     PDU + "SurroundObj28BatchCounter"
 )
@@ -50,3 +54,6 @@ OBJECT_SIGNALS = [
         obj_type= PDU + "SurroundObj20Type"
     ),
 ]
+
+SIGNAL_UB_ON = 3
+SIGNAL_UB_OFF = 0

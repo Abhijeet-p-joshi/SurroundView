@@ -4,7 +4,6 @@ from canoe.canoe_interface import CANoeInterface
 from injection.scenario_buffer import ScenarioBuffer
 from config.replay_config import OBJECTS_PER_UPDATE
 
-
 class Transmitter(QObject):
     """
     Transmits one scenario to CANoe.
@@ -23,9 +22,7 @@ class Transmitter(QObject):
     ):
 
         super().__init__()
-
         self.canoe = canoe
-
         self.buffer = scenario_buffer
 
     # ---------------------------------------------------------
@@ -38,7 +35,7 @@ class Transmitter(QObject):
 
         Update Bit becomes HIGH.
         """
-
+        print("Update Bit HIGH")
         self.canoe.write_update_bit(True)
 
     def finish_cycle(self):
@@ -47,7 +44,7 @@ class Transmitter(QObject):
 
         Update Bit becomes LOW.
         """
-
+        print("Update Bit LOW")
         self.canoe.write_update_bit(False)
 
     def transmit_slot(self, slot_index: int):
@@ -58,25 +55,15 @@ class Transmitter(QObject):
         written into the three physical CANoe
         object signal groups.
         """
-
-        print("=" * 60)
-        print(f"transmit_slot({slot_index})")
-
         objects = self.buffer.get_objects()
-
         start = slot_index * OBJECTS_PER_UPDATE
-
         end = start + OBJECTS_PER_UPDATE
-
         slot_objects = objects[start:end]
 
         if len(slot_objects) != OBJECTS_PER_UPDATE:
             return
 
-        print(f"\nTransmit Slot {slot_index + 1}")
-
         for signal_group, obj in enumerate(slot_objects):
-
             print(
                 f"  Group {signal_group}"
                 f" -> Slot {obj.slot}"

@@ -1,13 +1,17 @@
 import win32com.client
-from canoe.signal_mapping import SIGNALS
+# from canoe.signal_mapping import SIGNALS
 from canoe.signal_map import (
     UPDATE_BIT,
     OBJECT_SIGNALS,
     BATCH_COUNTER
 )
-from models import DetectedObject, ObjectType
-from config.object_types import OBJECT_TYPE_MAP
+from models import DetectedObject
+from config.ecu_object_types import (
+    from_ecu,
+    to_ecu,
+)
 from config.replay_config import OBJECTS_PER_UPDATE
+from config.constants import SIGNAL_UB_ON, SIGNAL_UB_OFF
 
 class CANoeInterface:
     """
@@ -22,35 +26,35 @@ class CANoeInterface:
         if not self.canoe.Measurement.Running:
             raise RuntimeError("CANoe Measurement is not running.")
         
-        # Cache signal COM objects
-        self.signal_cache = {}
+        # # Cache signal COM objects
+        # self.signal_cache = {}
 
-        # Preload all signals
-        self._preload_signals()
+        # # Preload all signals
+        # self._preload_signals()
 
         print("Connected to CANoe.")
 
-    def _preload_signals(self):
+    # def _preload_signals(self):
 
-        for mapping in SIGNALS.values():
+    #     for mapping in SIGNALS.values():
 
-            self.get_signal(mapping["x"])
-            self.get_signal(mapping["y"])
-            self.get_signal(mapping["type"])
+    #         self.get_signal(mapping["x"])
+    #         self.get_signal(mapping["y"])
+    #         self.get_signal(mapping["type"])
 
-    def get_signal(self, short_name):
+    # def get_signal(self, short_name):
 
-        if short_name not in self.signal_cache:
+    #     if short_name not in self.signal_cache:
 
-            full_name = self.canoe.Signals.FullSignalName(short_name)
+    #         full_name = self.canoe.Signals.FullSignalName(short_name)
 
-            print(f"{short_name}  ->  {full_name}")
+    #         print(f"{short_name}  ->  {full_name}")
 
-            signal = self.canoe.Signals.Item(full_name)
+    #         signal = self.canoe.Signals.Item(full_name)
 
-            self.signal_cache[short_name] = signal
+    #         self.signal_cache[short_name] = signal
 
-        return self.signal_cache[short_name]
+    #     return self.signal_cache[short_name]
 
     def read_update_bit(self):
 
@@ -87,10 +91,20 @@ class CANoeInterface:
             )
 
     def write_update_bit(self, value: bool):
-        self.write_signal(
-            UPDATE_BIT,
-            int(value)
-        )
+        """
+        Controls the Update Bit through the CANoe System Variable.
+        3 = Update Bit ON
+        0 = Update Bit OFF
+        """
+
+        try:
+            ns = self.canoe.System.Namespaces.Item("_SPACommon")
+            var = ns.Variables.Item("UBControl")
+            var.Value = SIGNAL_UB_ON if value else SIGNAL_UB_OFF
+            print(f"UBControl = {var.Value}")
+
+        except Exception as e:
+            print(f"Failed to write UBControl: {e}")
 
     def write_object(
         self,
@@ -126,7 +140,7 @@ class CANoeInterface:
 
         self.write_signal(
             signal_set.obj_type,
-            obj.object_type.value,
+            to_ecu(obj.object_type),
         )
 
         print(
@@ -137,10 +151,13 @@ class CANoeInterface:
 
     def decode_object_type(self, value):
         """
-        Converts ECU object type value to ObjectType enum.
+        Converts ECU value into application ObjectType.
         """
-
-        return OBJECT_TYPE_MAP.get(value, ObjectType.CAR)
+        try:
+            return from_ecu(value)
+        except KeyError:
+            print(f"Unknown ECU Object Type: {value}")
+            return from_ecu(10)   # default = CAR
 
     def read_current_objects(self):
         """
@@ -179,18 +196,26 @@ class CANoeInterface:
 
         return int(value)
 
-#Temporary
-    def debug_print_objects(self):
+    def write_system_variable(self, full_name: str, value):
+        """
+        Writes a CANoe System Variable.
+        """
 
-        objects = self.read_current_objects()
+        try:
+            namespace_path = full_name.split("::")
+            variable_name = namespace_path[-1]
+            namespace = self.canoe.System.Namespaces
+            
+            for part in namespace_path[:-1]:        # Walk down the namespace hierarchy
+                namespace = namespace.Item(part)
 
-        print("--------------------------------")
+            variable = namespace.Variables.Item(
+                variable_name
+            )
+            variable.Value = value
 
-        for obj in objects:
-
+        except Exception as e:
             print(
-                obj.slot,
-                obj.object_type,
-                obj.x,
-                obj.y
+                f"Failed to write System Variable "
+                f"{full_name}: {e}"
             )

@@ -1,5 +1,6 @@
 from enum import IntEnum
 class ObjectType(IntEnum):
+
     CAR = 0
     BIKE = 1
     TRUCK = 2
