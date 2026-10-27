@@ -13,6 +13,7 @@ APP_TO_ECU = {
     ObjectType.CAR: 10,
     ObjectType.BIKE: 5,
     ObjectType.TRUCK: 11,
+    ObjectType.NONE: 3
 
 }
 
@@ -22,6 +23,7 @@ ECU_TO_APP = {
     10: ObjectType.CAR,
     5: ObjectType.BIKE,
     11: ObjectType.TRUCK,
+    3: ObjectType.NONE,
 
 }
 

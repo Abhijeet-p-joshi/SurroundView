@@ -210,6 +210,7 @@ class InjectTab(QWidget):
 
             combo.addItems(
                 [
+                    "None",
                     "Car",
                     "Truck",
                     "Bike",

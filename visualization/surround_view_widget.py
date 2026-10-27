@@ -147,17 +147,22 @@ class SurroundViewWidget(QWidget):
             ObjectType.CAR: "s",
             ObjectType.BIKE: "t",
             ObjectType.TRUCK: "d",
+            ObjectType.NONE: None,
         }
 
         color_map = {
             ObjectType.CAR: "b",
             ObjectType.BIKE: "g",
             ObjectType.TRUCK: "r",
+            ObjectType.NONE: None,
         }
 
         spots = []
 
         for obj in objects:
+
+            if obj.object_type == ObjectType.NONE:
+                continue
 
             spots.append(
                 {
@@ -179,6 +184,9 @@ class SurroundViewWidget(QWidget):
 
         # Create labels
         for obj in objects:
+
+            if obj.object_type == ObjectType.NONE:
+                continue
 
             text = pg.TextItem(
                 text=f"#{obj.slot} {obj.object_type.name.title()}",

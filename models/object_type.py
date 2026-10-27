@@ -4,6 +4,7 @@ class ObjectType(IntEnum):
     CAR = 0
     BIKE = 1
     TRUCK = 2
+    NONE = 3
 
     @property
     def display_name(self):
