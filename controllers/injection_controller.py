@@ -5,10 +5,7 @@ from canoe.preview_canoe_interface import PreviewCANoeInterface
 
 from controllers.visualization_controller import VisualizationController
 
-from injection.scheduler import Scheduler
-from injection.transmitter import Transmitter
 from injection.scenario import Scenario
-from injection.scenario_buffer import ScenarioBuffer
 
 
 class InjectionController(QObject):
@@ -46,16 +43,7 @@ class InjectionController(QObject):
         else:
             self.canoe = CANoeInterface()
 
-        self.buffer = ScenarioBuffer()
-
-        self.transmitter = Transmitter(
-            self.canoe,
-            self.buffer,
-        )
-
-        self.scheduler = Scheduler(
-            self.transmitter,
-        )
+        self.current_scenario = None
 
         self.running = False
 
@@ -70,9 +58,6 @@ class InjectionController(QObject):
         """
         Called when Apply Scenario is pressed.
         """
-        print("\n========== InjectionController ==========")
-        print("apply_scenario() called")
-        print("Objects:", scenario.object_count())
 
         if scenario is None:
             return
@@ -86,7 +71,12 @@ class InjectionController(QObject):
             return
 
         # Store scenario
-        self.buffer.set_scenario(scenario)
+        self.current_scenario = scenario
+
+        # Load all 18 objects into CANoe System Variables
+        self.canoe.write_scenario(
+            scenario.sorted_objects()
+        )
 
         # Update visualization immediately
         self.visualization.show_objects(scenario.sorted_objects())
@@ -94,37 +84,49 @@ class InjectionController(QObject):
             f"Scenario Applied ({scenario.object_count()} objects)"
         )
 
-        print("InjectionController.apply_scenario()")
-        print("Objects:", scenario.object_count())
-
     # ---------------------------------------------------------
     # Injection
     # ---------------------------------------------------------
 
     def start(self):
+
         if self.running:
             return
-        if not self.buffer.has_scenario():
+
+        if self.current_scenario is None:
 
             self.status_changed.emit(
                 "No scenario loaded."
             )
+
             return
-        self.scheduler.start()
+
+        self.canoe.start_injection()
+
         self.running = True
+
         self.injection_started.emit()
+
         self.status_changed.emit(
-            "Injection Started"
+            f"Injection Started ({self.current_scenario.object_count()} objects)"
         )
 
     # ---------------------------------------------------------
 
     def stop(self):
+
         if not self.running:
             return
-        self.scheduler.stop()
+
+        if self.current_scenario is None:
+            return
+
+        self.canoe.stop_injection()
+
         self.running = False
+
         self.injection_stopped.emit()
+
         self.status_changed.emit(
             "Injection Stopped"
         )
@@ -141,7 +143,8 @@ class InjectionController(QObject):
 
     def clear(self):
         self.stop()
-        self.buffer.clear()
+        self.current_scenario = None
+        self.canoe.clear_scenario()
         self.visualization.clear()
         self.status_changed.emit(
             "Scenario Cleared"
@@ -149,13 +152,13 @@ class InjectionController(QObject):
 
     # ---------------------------------------------------------
 
-    def current_scenario(self):
-        return self.buffer.get_scenario()
+    def get_current_scenario(self):
+        return self.current_scenario
 
     # ---------------------------------------------------------
 
     def has_scenario(self):
-        return self.buffer.has_scenario()
+        return self.current_scenario is not None
 
     # ---------------------------------------------------------
 

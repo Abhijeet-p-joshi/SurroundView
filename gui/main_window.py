@@ -64,31 +64,17 @@ class MainWindow(QMainWindow):
 
         layout = QVBoxLayout(central)
 
-        #
         # Splitter
-        #
-
         splitter = QSplitter(Qt.Vertical)
 
-        #
         # Tabs
-        #
-
         self.tabs = QTabWidget()
 
+        self.inject_tab = InjectTab()
         self.replay_tab = ReplayTab()
 
-        self.inject_tab = InjectTab()
-
-        self.tabs.addTab(
-            self.replay_tab,
-            "Replay",
-        )
-
-        self.tabs.addTab(
-            self.inject_tab,
-            "Inject",
-        )
+        self.tabs.addTab(self.inject_tab,"Inject",)
+        self.tabs.addTab(self.replay_tab,"Replay",)
 
         splitter.addWidget(self.tabs)
 
