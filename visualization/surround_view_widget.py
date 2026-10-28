@@ -1,21 +1,22 @@
 import pyqtgraph as pg
-from PySide6.QtWidgets import (
-    QWidget,
-    QVBoxLayout,
-)
-from PySide6.QtCore import QRectF
+
+import numpy as np
+
+from PySide6.QtWidgets import QWidget, QVBoxLayout
+from PySide6.QtCore import QRectF, Signal, Qt
 from PySide6.QtGui import QPen, QBrush, QColor
 from PySide6.QtWidgets import QGraphicsRectItem
+from PySide6.QtWidgets import QGraphicsRectItem
+from PySide6.QtGui import QPen, QBrush, QColor
 
 from models import DetectedObject, ObjectType
+
 from config.constants import (
     X_MIN, X_MAX, Y_MIN, Y_MAX,
-    EGO_LENGTH, EGO_WIDTH)
-from PySide6.QtWidgets import QGraphicsRectItem
-from PySide6.QtGui import QPen, QBrush, QColor
-from PySide6.QtCore import QRectF
-from PySide6.QtCore import Signal
+    EGO_LENGTH, EGO_WIDTH,
+    NUMBER_OF_LANES)
 
+from visualization.lane_geometry_calc import generate_lane_points
 
 class SurroundViewWidget(QWidget):
 
@@ -32,6 +33,7 @@ class SurroundViewWidget(QWidget):
         self._setup_plot()
 
         self.labels = []
+        self.lane_curves = []
 
         self._draw_ego_vehicle()
 
@@ -66,19 +68,17 @@ class SurroundViewWidget(QWidget):
         ])
 
         self._create_legend()
-        # self.object_map = {}
-        # self.selected_object = None
-        # self.selected_point = None
 
-        # self.dragging = False
-
-        # self.plot.scene().sigMouseMoved.connect(
-        #     self.mouse_moved
-        # )
-
-        # self.plot.scene().sigMouseClicked.connect(
-        #     self.mouse_clicked
-        # )
+        for _ in range(NUMBER_OF_LANES):
+            curve = self.plot.plot(
+                [],
+                [],
+                pen=pg.mkPen(
+                    color=(255,255,0),
+                    width=3,
+                ),
+            )
+            self.lane_curves.append(curve)
 
     def _setup_plot(self):
 
@@ -252,43 +252,75 @@ class SurroundViewWidget(QWidget):
 
         self.plot.addItem(legend)
 
-        def scatter_clicked(self, scatter, points):
+    def scatter_clicked(self, scatter, points):
 
-            if not points:
-                return
+        if not points:
+            return
 
-            self.selected_point = points[0]
+        self.selected_point = points[0]
 
-            self.selected_object = points[0].data()
+        self.selected_object = points[0].data()
 
-            self.dragging = True
+        self.dragging = True
 
-            print(f"Selected slot {self.selected_object.slot}")
+        print(f"Selected slot {self.selected_object.slot}")
 
-        def mouse_moved(self, pos):
+    def mouse_moved(self, pos):
 
-            if not self.dragging:
-                return
+        if not self.dragging:
+            return
 
-            mouse_point = self.plot.plotItem.vb.mapSceneToView(pos)
+        mouse_point = self.plot.plotItem.vb.mapSceneToView(pos)
 
-            self.selected_object.x = mouse_point.x()
-            self.selected_object.y = mouse_point.y()
+        self.selected_object.x = mouse_point.x()
+        self.selected_object.y = mouse_point.y()
 
-            self.update_objects(
-                list(self.object_map.values())
+        self.update_objects(
+            list(self.object_map.values())
+        )
+
+    def mouse_clicked(self, event):
+
+        if not self.dragging:
+            return
+
+        if event.button() == Qt.LeftButton:
+            self.dragging = False
+            self.objectMoved.emit(
+                self.selected_object.slot,
+                self.selected_object.x,
+                self.selected_object.y
+            )
+            print("Released")
+
+    def update_lanes(self, lanes):
+
+        # Remove previous lane curves
+        for curve in self.lane_curves:
+            self.plot.removeItem(curve)
+
+        self.lane_curves.clear()
+
+        # Draw new lanes
+        for lane in lanes:
+
+            x_m, y_m = generate_lane_points(lane)
+
+            x_cm = x_m * 100.0
+            y_cm = y_m * 100.0
+
+            curve = pg.PlotCurveItem(
+                x_cm,
+                y_cm,
+                pen=pg.mkPen(
+                    color="k",
+                    width=2,
+                    style=Qt.DotLine
+                ),
             )
 
-        def mouse_clicked(self, event):
+            self.plot.addItem(curve)
 
-            if not self.dragging:
-                return
+            self.lane_curves.append(curve)
 
-            if event.button() == Qt.LeftButton:
-                self.dragging = False
-                self.objectMoved.emit(
-                    self.selected_object.slot,
-                    self.selected_object.x,
-                    self.selected_object.y
-                )
-                print("Released")
+        print("Lane visualization updated.")

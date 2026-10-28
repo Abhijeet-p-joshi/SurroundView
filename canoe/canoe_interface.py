@@ -1,21 +1,23 @@
 import win32com.client
-# from canoe.signal_mapping import SIGNALS
 
 from models import DetectedObject
-
-from models import ObjectType
+from models.object_type import ObjectType
 
 from config.ecu_object_types import (
     from_ecu,
     to_ecu,
 )
+from config.ecu_lane_positions import to_ecu_lane
 
 from canoe.system_variables import (
     INJECTION_ENABLE,
     OBJ_X,
     OBJ_Y,
     OBJ_TYPE,
+    LANES,
 )
+
+from models.lane import Lane
 
 class CANoeInterface:
     """
@@ -81,14 +83,30 @@ class CANoeInterface:
         CANoe System Variables.
         """
 
-        if len(objects) != 18:
+        if len(objects) > 18:
             raise ValueError(
-                "Scenario must contain exactly 18 objects."
+                "Maximum 18 objects allowed."
             )
 
+        # Make a copy
+        objects = list(objects)
+
+        # Pad remaining slots with NONE objects
+        while len(objects) < 18:
+
+            objects.append(
+                DetectedObject(
+                    slot=len(objects) + 1,
+                    x=0.0,
+                    y=0.0,
+                    object_type=ObjectType.NONE,
+                )
+            )
+
+        # Write all 18 slots
         for i, obj in enumerate(objects):
 
-            if obj.object_type.name == ObjectType.NONE:
+            if obj.object_type == ObjectType.NONE:
 
                 self.write_system_variable(
                     OBJ_X[i],
@@ -102,25 +120,25 @@ class CANoeInterface:
 
                 self.write_system_variable(
                     OBJ_TYPE[i],
-                    3,          # NONE
+                    to_ecu(ObjectType.NONE),
                 )
 
-                continue
+            else:
 
-            self.write_system_variable(
-                OBJ_X[i],
-                obj.x,
-            )
+                self.write_system_variable(
+                    OBJ_X[i],
+                    obj.x,
+                )
 
-            self.write_system_variable(
-                OBJ_Y[i],
-                obj.y,
-            )
+                self.write_system_variable(
+                    OBJ_Y[i],
+                    obj.y,
+                )
 
-            self.write_system_variable(
-                OBJ_TYPE[i],
-                to_ecu(obj.object_type),
-            )
+                self.write_system_variable(
+                    OBJ_TYPE[i],
+                    to_ecu(obj.object_type),
+                )
 
         print("Scenario written to CANoe.")
 
@@ -168,3 +186,58 @@ class CANoeInterface:
             )
 
         print("Scenario cleared.")
+
+    def write_lane(
+        self,
+        lane: Lane,
+        lane_index: int,
+    ):
+
+        print(f"write_lane() called: {lane.name}")
+        variables = LANES[lane_index]
+
+        self.write_system_variable(
+            variables[0],
+            lane.a,
+        )
+
+        self.write_system_variable(
+            variables[1],
+            lane.b,
+        )
+
+        self.write_system_variable(
+            variables[2],
+            lane.c,
+        )
+
+        self.write_system_variable(
+            variables[3],
+            lane.d1,
+        )
+
+        self.write_system_variable(
+            variables[4],
+            lane.d2,
+        )
+
+        self.write_system_variable(
+            variables[5],
+            lane.position.value,
+        )
+
+    def write_lanes(self, lanes):
+
+        if len(lanes) != 4:
+            raise ValueError("Exactly four lanes required.")
+
+        for index, lane in enumerate(lanes):
+
+            print(f"Writing Lane {lane.name}")
+
+            self.write_lane(
+                lane,
+                index,
+            )
+
+        print("Lane geometry written to CANoe.")

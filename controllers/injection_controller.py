@@ -1,4 +1,5 @@
-from PySide6.QtCore import QObject, Signal
+from PySide6.QtCore import QObject, Signal, Qt
+from PySide6.QtWidgets import QApplication
 
 from canoe.canoe_interface import CANoeInterface
 from canoe.preview_canoe_interface import PreviewCANoeInterface
@@ -63,26 +64,29 @@ class InjectionController(QObject):
             return
 
         if scenario.object_count() == 0:
-
             self.status_changed.emit(
                 "Scenario contains no enabled objects."
             )
-
             return
 
-        # Store scenario
-        self.current_scenario = scenario
-
-        # Load all 18 objects into CANoe System Variables
-        self.canoe.write_scenario(
-            scenario.sorted_objects()
+        QApplication.setOverrideCursor(
+            Qt.WaitCursor
         )
+        QApplication.processEvents()
 
-        # Update visualization immediately
-        self.visualization.show_objects(scenario.sorted_objects())
-        self.status_changed.emit(
-            f"Scenario Applied ({scenario.object_count()} objects)"
-        )
+        try:
+            self.status_changed.emit("Applying scenario...")
+            self.current_scenario = scenario         # Store scenario
+            self.canoe.write_scenario(               # Load objects into CANoe
+                scenario.sorted_objects()
+            )
+            self.visualization.show_objects(         # Update visualization
+                scenario.sorted_objects()
+            )
+            self.status_changed.emit(f"Scenario Applied ({scenario.object_count()} objects)")
+
+        finally:
+            QApplication.restoreOverrideCursor()
 
     # ---------------------------------------------------------
     # Injection
@@ -90,46 +94,43 @@ class InjectionController(QObject):
 
     def start(self):
 
-        if self.running:
-            return
+        QApplication.setOverrideCursor(Qt.WaitCursor)
+        QApplication.processEvents()
 
-        if self.current_scenario is None:
-
+        try:
             self.status_changed.emit(
-                "No scenario loaded."
+                "Starting injection..."
+            )
+            self.canoe.start_injection()
+            self._running = True
+            self.injection_started.emit()
+            self.status_changed.emit(
+                "Injection started."
             )
 
-            return
-
-        self.canoe.start_injection()
-
-        self.running = True
-
-        self.injection_started.emit()
-
-        self.status_changed.emit(
-            f"Injection Started ({self.current_scenario.object_count()} objects)"
-        )
+        finally:
+            QApplication.restoreOverrideCursor()
 
     # ---------------------------------------------------------
 
     def stop(self):
 
-        if not self.running:
-            return
+        QApplication.setOverrideCursor(Qt.WaitCursor)
+        QApplication.processEvents()
 
-        if self.current_scenario is None:
-            return
+        try:
+            self.status_changed.emit(
+                "Stopping injection..."
+            )
+            self.canoe.stop_injection()
+            self._running = False
+            self.injection_stopped.emit()
+            self.status_changed.emit(
+                "Injection stopped."
+            )
 
-        self.canoe.stop_injection()
-
-        self.running = False
-
-        self.injection_stopped.emit()
-
-        self.status_changed.emit(
-            "Injection Stopped"
-        )
+        finally:
+            QApplication.restoreOverrideCursor()
 
     # ---------------------------------------------------------
 

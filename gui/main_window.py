@@ -10,32 +10,16 @@ from PySide6.QtWidgets import (
 
 from gui.replay_tab import ReplayTab
 from gui.inject_tab import InjectTab
+from gui.lane_editor import LaneEditor
 
 from visualization.surround_view_widget import SurroundViewWidget
 
 from controllers.visualization_controller import VisualizationController
 from controllers.replay_controller import ReplayController
 from controllers.injection_controller import InjectionController
-
+from controllers.lane_controller import LaneController
 
 class MainWindow(QMainWindow):
-    """
-    Main application window.
-
-    Layout
-
-        +-----------------------------------------+
-        | Replay | Inject                         |
-        +-----------------------------------------+
-        |                                         |
-        |   Current Tab                           |
-        |                                         |
-        +-----------------------------------------+
-        |                                         |
-        |    Surround View Visualization          |
-        |                                         |
-        +-----------------------------------------+
-    """
 
     def __init__(self, preview_mode=False):
 
@@ -71,17 +55,16 @@ class MainWindow(QMainWindow):
         self.tabs = QTabWidget()
 
         self.inject_tab = InjectTab()
+        self.lane_editor = LaneEditor() 
         self.replay_tab = ReplayTab()
 
-        self.tabs.addTab(self.inject_tab,"Inject",)
+        self.tabs.addTab(self.inject_tab,"Objects",)
+        self.tabs.addTab(self.lane_editor,"Lane Geometries",)
         self.tabs.addTab(self.replay_tab,"Replay",)
 
         splitter.addWidget(self.tabs)
 
-        #
         # Visualization
-        #
-
         visualization_frame = QFrame()
 
         visualization_layout = QVBoxLayout(
@@ -129,6 +112,11 @@ class MainWindow(QMainWindow):
             preview_mode=self.preview_mode,
         )
 
+        self.lane_controller = LaneController(
+            self.visualization_controller,
+            preview_mode=self.preview_mode,
+        )
+
     # ---------------------------------------------------------
     # Signal Connections
     # ---------------------------------------------------------
@@ -158,9 +146,6 @@ class MainWindow(QMainWindow):
 
         # Apply Scenario
         self.inject_tab.scenarioApplied.connect(
-            lambda scenario: print("MainWindow received scenario")
-        )
-        self.inject_tab.scenarioApplied.connect(
             self.injection_controller.apply_scenario
         )
 
@@ -171,6 +156,18 @@ class MainWindow(QMainWindow):
 
         self.inject_tab.stopInjectionRequested.connect(
             self.injection_controller.stop
+        )
+
+        # lane geometry
+        self.lane_editor.apply_clicked.connect(
+            lambda lanes: (
+                print("MainWindow received Apply"),
+                self.lane_controller.apply_lanes(lanes)
+            )
+        )
+
+        self.lane_controller.status_changed.connect(
+            self.statusBar().showMessage
         )
 
         # Update GUI
