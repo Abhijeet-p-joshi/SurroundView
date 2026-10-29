@@ -1,5 +1,6 @@
 import win32com.client
 import pythoncom
+import pywintypes
 
 from models import DetectedObject
 from models.object_type import ObjectType
@@ -30,14 +31,12 @@ class CANoeInterface:
         pythoncom.CoInitialize()
 
         try:
-            self.canoe = win32com.client.Dispatch(
-                "CANoe.Application"
-            )
+            self.canoe = win32com.client.Dispatch("CANoe.Application")
             print("Connected to CANoe.")
         except Exception as e:
             raise RuntimeError(
-                f"Unable to connect to CANoe: {e}"
-            )
+                "CANoe is not running."
+            ) from e
         
         if self.canoe.Measurement.Running:
             print("CANoe Measurement Running")
@@ -244,3 +243,9 @@ class CANoeInterface:
             )
 
         print("Lane geometry written to CANoe.")
+
+    def is_measurement_running(self) -> bool:
+        try:
+            return self.canoe.Measurement.Running
+        except Exception:
+            return False

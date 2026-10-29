@@ -2,6 +2,7 @@ from PySide6.QtCore import Signal
 from PySide6.QtWidgets import (
     QWidget,
     QVBoxLayout,
+    QHBoxLayout,
     QPushButton,
 )
 
@@ -28,9 +29,13 @@ class LaneEditor(QWidget):
         layout.addWidget(self.laneC)
         layout.addWidget(self.laneD)
 
+        # Button
         self.applyButton = QPushButton("Apply Lanes")
-
-        layout.addWidget(self.applyButton)
+        self.applyButton.setFixedWidth(100)
+        buttonLayout = QHBoxLayout()
+        buttonLayout.addWidget(self.applyButton)
+        buttonLayout.addStretch()
+        layout.addLayout(buttonLayout)
 
         self.applyButton.clicked.connect(
             lambda: (

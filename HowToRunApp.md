@@ -16,14 +16,14 @@ Install
 3. Include **SurroundView.cin** file in the ASDM node 
  - File can be found at [SurroundView.cin](https://intranet.volvocars.net/:u:/r/sites/DriverInformation/Shared%20Documents/Argus3%20Surround%20view/SV%20Testing%20tool/SurroundView.cin?d=wa272e730b4fc4160817d9fef56d55fc8&csf=1&web=1&e=YhJ26S)
 4. Compile the node successfully.
-3. Start Measurement.
-4. Verify all required System Variables exist:
+5. Start Measurement.
+6. Verify all required System Variables exist:
    - ASDM::Obj01_X … Obj18_X
    - ASDM::Obj01_Y … Obj18_Y
    - ASDM::Obj01_Type … Obj18_Type
    - ASDM::LaneA_a … LaneD_Position
    - ASDM::InjectionEnable
-5. Ensure the CAPL node is running.
+7. Ensure the CAPL node is running.
 
 ## Start the GUI
 - cd SurroundView(root folder)
