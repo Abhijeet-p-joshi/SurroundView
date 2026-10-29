@@ -4,6 +4,7 @@ from PySide6.QtWidgets import QApplication
 from canoe.canoe_interface import CANoeInterface
 from canoe.preview_canoe_interface import PreviewCANoeInterface
 
+from injection.scenario_io import ScenarioIO
 
 class LaneController(QObject):
     """
@@ -20,6 +21,7 @@ class LaneController(QObject):
         super().__init__()
 
         self.visualization = visualization
+        self.scenario_io = ScenarioIO()
 
         if preview_mode:
             self.canoe = PreviewCANoeInterface()
@@ -42,6 +44,8 @@ class LaneController(QObject):
             self.canoe.write_lanes(lanes)
 
             self.visualization.show_lanes(lanes)
+
+            self.scenario_io.save_lanes(lanes)
 
             self.status_changed.emit(
                 "Lane geometry applied."

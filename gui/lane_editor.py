@@ -7,7 +7,7 @@ from PySide6.QtWidgets import (
 )
 
 from gui.lane_group import LaneGroup
-
+from injection.scenario_io import ScenarioIO
 
 class LaneEditor(QWidget):
 
@@ -16,7 +16,7 @@ class LaneEditor(QWidget):
     def __init__(self):
 
         super().__init__()
-
+        self.scenario_io = ScenarioIO()
         layout = QVBoxLayout(self)
 
         self.laneA = LaneGroup("Lane A")
@@ -46,6 +46,9 @@ class LaneEditor(QWidget):
                 )
             )
         )
+        self.set_lanes(
+            self.scenario_io.load_lanes()
+        )
 
     def lanes(self):
         return [
@@ -54,3 +57,13 @@ class LaneEditor(QWidget):
             self.laneC.lane("C"),
             self.laneD.lane("D"),
         ]
+
+    def set_lanes(self, lanes):
+        if lanes is None:
+            return
+        if len(lanes) != 4:
+            return
+        self.laneA.set_lane(lanes[0])
+        self.laneB.set_lane(lanes[1])
+        self.laneC.set_lane(lanes[2])
+        self.laneD.set_lane(lanes[3])

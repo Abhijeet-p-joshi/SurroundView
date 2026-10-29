@@ -112,3 +112,10 @@ class LaneGroup(QGroupBox):
             d1=self.d1.value(),
             d2=self.d2.value(),
         )
+
+    def set_lane(self, lane):
+        self.a.setValue(lane.a)
+        self.b.setValue(lane.b)
+        self.c.setValue(lane.c)
+        self.d1.setValue(lane.d1)
+        self.d2.setValue(lane.d2)

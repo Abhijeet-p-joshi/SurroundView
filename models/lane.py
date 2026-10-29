@@ -3,8 +3,8 @@ from enum import Enum
 
 class LanePosition(Enum):
     CLOSEST_LEFT = 0
-    SECOND_CLOSEST_LEFT = 1
-    CLOSEST_RIGHT = 2
+    SECOND_CLOSEST_LEFT = 2
+    CLOSEST_RIGHT = 1
     SECOND_CLOSEST_RIGHT = 3
 
 DISPLAY_NAMES = {
