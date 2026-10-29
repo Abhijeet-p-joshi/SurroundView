@@ -40,12 +40,11 @@ Install
 ## Lane Geometry Workflow
 1. Open Lane Geometry tab.
 2. Enter
-   - a
-   - b
-   - c
-   - d1
-   - d2 
-   for each lane.
+   - a for each lane.
+   - b for each lane.
+   - c for each lane.
+   - d1 for each lane.
+   - d2 for each lane.
 3. Press Apply Lanes.
 4. Press Start Injection in Object tab
 5. The application
