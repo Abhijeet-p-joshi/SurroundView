@@ -284,6 +284,7 @@ class InjectTab(QWidget):
             "Car": ObjectType.CAR,
             "Truck": ObjectType.TRUCK,
             "Bike": ObjectType.BIKE,
+            "None": ObjectType.NONE,
         }
 
         for row in range(self.OBJECT_COUNT):
@@ -311,15 +312,11 @@ class InjectTab(QWidget):
         """
         Applies the current table contents as the active scenario.
         """
-
         scenario = self.current_scenario()
-
         ScenarioIO.save(scenario)
-
         self.scenario_label.setText(
             f"Scenario : {scenario.name}"
         )
-
         self.object_label.setText(
             f"Objects : {scenario.object_count()}"
         )
@@ -361,26 +358,19 @@ class InjectTab(QWidget):
             "Stop Injection"
         )
 
-        # self.toggle_button.setEnabled(True)
-
     # ----------------------------------------------------------
 
     def injection_stopped(self):
         """
         Updates the GUI after injection stops.
         """
-
         self.injection_running = False
-
         self.status_label.setText(
             "⚪ Stopped"
         )
-
         self.toggle_button.setText(
             "Start Injection"
         )
-
-        # self.toggle_button.setEnabled(True)
 
     def load_default_scenario(self):
         """
@@ -394,6 +384,7 @@ class InjectTab(QWidget):
             ObjectType.CAR: "Car",
             ObjectType.TRUCK: "Truck",
             ObjectType.BIKE: "Bike",
+            ObjectType.NONE: "None",
         }
 
         # Clear all rows first
