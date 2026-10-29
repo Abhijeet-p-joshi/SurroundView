@@ -1,4 +1,5 @@
 import win32com.client
+import pythoncom
 
 from models import DetectedObject
 from models.object_type import ObjectType
@@ -25,21 +26,23 @@ class CANoeInterface:
     """
 
     def __init__(self):
+
+        pythoncom.CoInitialize()
+
+        try:
+            self.canoe = win32com.client.Dispatch(
+                "CANoe.Application"
+            )
+            print("Connected to CANoe.")
+        except Exception as e:
+            raise RuntimeError(
+                f"Unable to connect to CANoe: {e}"
+            )
         
-        self.canoe = win32com.client.gencache.EnsureDispatch(
-            "CANoe.Application"
-        )
-        if not self.canoe.Measurement.Running:
-            raise RuntimeError("CANoe Measurement is not running.")
-
-        # self._load_capl_functions()
-        # # Cache signal COM objects
-        # self.signal_cache = {}
-
-        # # Preload all signals
-        # self._preload_signals()
-
-        print("Connected to CANoe.")
+        if self.canoe.Measurement.Running:
+            print("CANoe Measurement Running")
+        else:
+            print("CANoe Connected. Measurement Stopped.")
 
     def write_system_variable(
         self,

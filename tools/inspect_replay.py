@@ -1,6 +1,6 @@
 import win32com.client
 
-app = win32com.client.gencache.EnsureDispatch("CANoe.Application")
+app = win32com.client.Dispatch("CANoe.Application")
 
 print("=" * 60)
 print("Application")
