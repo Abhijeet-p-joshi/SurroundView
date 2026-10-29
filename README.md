@@ -1,133 +1,259 @@
-# Software Architecture
+# Architecture Diagram
 
-## Layered architecture
-            GUI
+                         +----------------------------------+
+                         |          SurroundView GUI        |
+                         |----------------------------------|
+                         | Inject Tab                       |
+                         | Replay Tab                       |
+                         | Lane Geometry Tab                |
+                         +----------------+-----------------+
+                                          |
+                                          |
+                           User Actions   |
+                                          v
+                 +--------------------------------------+
+                 |            Controllers               |
+                 |--------------------------------------|
+                 | Injection Controller                 |
+                 | Replay Controller                    |
+                 | Lane Controller                      |
+                 | Visualization Controller             |
+                 +----------------+---------------------+
+                                  |
+               +------------------+------------------+
+               |                                     |
+               v                                     v
+      +--------------------+              +----------------------+
+      |   CANoe Interface  |              | Visualization Widget |
+      |--------------------|              |----------------------|
+      | write_scenario()   |              | draw_objects()       |
+      | write_lane()       |              | draw_lanes()         |
+      | COM Interface      |              | PyQtGraph            |
+      +---------+----------+              +-----------+----------+
+                |                                     ^
+                |                                     |
+                v                                     |
+         +--------------+                     +------------------+
+         | CANoe System |                     | Lane Geometry    |
+         | Variables    |                     | Polynomial Model |
+         +------+-------+                     +------------------+
+                |
+                |
+                v
+          +-------------+
+          | CAPL Script |
+          +------+------+
+                 |
+                 |
+                 v
+          FlexRay Signals
 
-             │
+# Class diagram
 
-      Visualization
+                         MainWindow
+                              │
+         ┌────────────────────┼─────────────────────┐
+         │                    │                     │
+         │                    │                     │
+         ▼                    ▼                     ▼
+    InjectTab            ReplayTab            LaneEditor
+         │                    │                     │
+         │                    │                     │
+         ▼                    ▼                     ▼
+InjectionController   ReplayController      LaneController
+         │                    │                     │
+         └──────────────┬─────┴─────────────────────┘
+                        │
+                        ▼
+              VisualizationController
+                        │
+                        ▼
+              SurroundViewWidget
+                        │
+         ┌──────────────┴───────────────┐
+         │                              │
+         ▼                              ▼
+  Object Rendering              Lane Rendering
+         │                              │
+         └──────────────┬───────────────┘
+                        ▼
+                 CANoeInterface
+                        │
+                        ▼
+              Python COM Automation
+                        │
+                        ▼
+                     CANoe
+                        │
+                        ▼
+                 CAPL Scheduler
+                        │
+                        ▼
+                FlexRay Signal Output
 
-             │
+# Repository structure
 
-      Data Manager
+SurroundView
+│
+├── canoe/
+│      CANoe COM interface
+│      Signal mapping
+│      System variable access
+│
+├── config/
+│      Global constants
+│      ECU mappings
+│
+├── controllers/
+│      Business logic
+│
+├── gui/
+│      Qt widgets
+│
+├── models/
+│      Data classes
+│
+├── replay/
+│      Replay engine
+│
+├── injection/
+│      Injection engine
+│
+├── visualization/
+│      Object and lane rendering
+│
+├── scenarios/
+│      JSON scenarios
+│
+└── main.py
 
-        ↙       ↘
+# MVC Architecture
 
-    CANoe         CSV
+                 GUI
+                  │
+                  │ Signals
+                  ▼
+             Controllers
+                  │
+                  ▼
+              Data Models
+                  │
+         +--------+--------+
+         |                 |
+         ▼                 ▼
+ Visualization        CANoe Interface
+         │                 │
+         ▼                 ▼
+    PyQtGraph         System Variables
 
-        ↘       ↙
+# Injection flow
 
-         Data Model
-
-## Data Flow
-Suppose you enter
-X = 50
-Y = 70
-
-**Flow**
-GUI
-↓
-Data Model
-↓
-CANoe Interface
-↓
-System Variable
-↓
-Vector Hardware
-↓
-ECU
-
-**Simultaneously**
-GUI
-↓
-Data Model
-↓
-Visualization
-↓
-Move Point
-
-## Design
-        SurroundView (Python GUI)
-                 │
-                 ▼
-        User enters coordinates
-                 │
-        ┌────────┴────────┐
-        ▼                 ▼
- Visualization      FlexRay Signals
- (Immediate)             │
-                          ▼
-                     CANoe Database
-                          │
-                     Measurement
-                          │
-                     VN8914 Interface
-                          │
-                          ▼
-                         ECU
-
-## Introduce the controller
-GUI
+User
  │
  ▼
-Controller
+Apply Scenario
  │
- ├──► Visualization
+ ▼
+InjectionController
  │
- └──► CANoe
- 
-This follows the Model–View–Controller (MVC) pattern.
+ ▼
+Scenario
+ │
+ ▼
+CANoeInterface.write_scenario()
+ │
+ ▼
+CANoe System Variables
+ │
+ ▼
+CAPL Scheduler
+ │
+ ▼
+FlexRay Signals
+ │
+ ▼
+ECU
 
-The advantages are:
-- The control panel doesn't know the visualization exists.
-- The visualization doesn't know CANoe exists.
-- CANoe doesn't know about the GUI.
-When you press Apply, the controller will:
-1. Receive the objects.
-2. Update the visualization.
-3. Write the FlexRay signals.
-4. Log the operation (later).
+# Replay flow
 
-                      MainWindow
-                          │
-           ┌──────────────┴──────────────┐
-           │                             │
-      ControlPanel               SurroundViewWidget
-           │
-           │ apply_clicked(objects)
-           ▼
-         SurroundViewController
-            │             │
-            ▼             ▼
- Visualization       CANoe (later)
+User
+ │
+ ▼
+Apply Scenario
+ │
+ ▼
+InjectionController
+ │
+ ▼
+Scenario
+ │
+ ▼
+CANoeInterface.write_scenario()
+ │
+ ▼
+CANoe System Variables
+ │
+ ▼
+CAPL Scheduler
+ │
+ ▼
+FlexRay Signals
+ │
+ ▼
+ECU
 
+# Lane flow
 
- # Final implementation
+Lane Geometry Tab
+ │
+ ▼
+LaneController
+ │
+ ▼
+CANoeInterface.write_lane()
+ │
+ ▼
+System Variables
+ │
+ ▼
+CAPL
+ │
+ ▼
+Lane Signals
+ │
+ ▼
+Visualization
 
-                 +-----------------------------+
-                |      Python GUI             |
-                | (PySide6 + PyQtGraph)       |
-                +--------------+--------------+
-                               |
-                               | Apply
-                               |
-                               ▼
-                    SurroundViewController
-                               |
-                 +-------------+-------------+
-                 |                           |
-                 ▼                           ▼
-         Visualization                CANoe Interface
-         (PyQtGraph)                     (COM API)
-                 |                           |
-                 |                           ▼
-                 |                  Symbolic Signals
-                 |                           |
-                 ▼                           ▼
-            2D Display             FlexRay Database Signals
-                                           |
-                                           ▼
-                                        VN8914
-                                           |
-                                           ▼
-                                          ECU
+# Visualization Pipeline
+
+Detected Objects
+        │
+        ▼
+Visualization Controller
+        │
+        ▼
+SurroundViewWidget
+        │
+        ├── Draw Vehicles
+        ├── Draw Ego Vehicle
+        ├── Draw Grid
+        └── Draw Lane Geometry
+
+# CANoe Communication
+
+Python GUI
+ │
+ ▼
+win32com
+ │
+ ▼
+CANoe COM API
+ │
+ ▼
+System Variables
+ │
+ ▼
+CAPL
+ │
+ ▼
+FlexRay Frames
