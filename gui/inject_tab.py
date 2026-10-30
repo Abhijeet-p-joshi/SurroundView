@@ -17,6 +17,7 @@ from PySide6.QtWidgets import (
 from injection.scenario import Scenario
 from models import DetectedObject, ObjectType
 from injection.scenario_io import ScenarioIO
+from config.constants import X_MAX, X_MIN, Y_MAX, Y_MIN
 
 class InjectTab(QWidget):
 
@@ -231,7 +232,7 @@ class InjectTab(QWidget):
 
             x = QDoubleSpinBox()
 
-            x.setRange(0, 13000)
+            x.setRange(X_MIN, X_MAX)
 
             x.setDecimals(1)
 
@@ -253,7 +254,7 @@ class InjectTab(QWidget):
 
             y = QDoubleSpinBox()
 
-            y.setRange(-1000, 1000)
+            y.setRange(Y_MIN, Y_MAX)
 
             y.setDecimals(1)
 

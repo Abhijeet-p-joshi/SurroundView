@@ -1,4 +1,5 @@
 import json
+import sys
 from pathlib import Path
 
 from injection.scenario import Scenario
@@ -8,8 +9,17 @@ from models.lane import Lane, LanePosition
 
 class ScenarioIO:
 
+    # Determine project folder
+    if getattr(sys, "frozen", False):
+        # Running from executable
+        BASE_DIR = Path(sys.executable).parent
+
+    else:
+        # Running from Python
+        BASE_DIR = Path(__file__).resolve().parent.parent
+
     DEFAULT_FILE = (
-        Path(__file__).parent.parent
+        BASE_DIR
         / "scenarios"
         / "default.json"
     )
@@ -20,6 +30,8 @@ class ScenarioIO:
     def load(cls):
 
         path = cls.DEFAULT_FILE
+        print("Loading JSON from:")
+        print(cls.DEFAULT_FILE.resolve())
 
         if not path.exists():
 
@@ -31,13 +43,28 @@ class ScenarioIO:
 
             return scenario
 
-        with open(
-            path,
-            "r",
-            encoding="utf-8"
-        ) as file:
+        try:
 
-            data = json.load(file)
+            with open(
+                path,
+                "r",
+                encoding="utf-8",
+            ) as file:
+
+                data = json.load(file)
+
+        except json.JSONDecodeError:
+            print(
+                "default.json is corrupted."
+            )
+
+            scenario = Scenario(
+                name="Default Scenario"
+            )
+
+            cls.save(scenario)
+
+            return scenario
 
         scenario = Scenario(
             name=data.get(
@@ -142,18 +169,26 @@ class ScenarioIO:
         if not path.exists():
             return []
 
-        with open(
-            path,
-            "r",
-            encoding="utf-8",
-        ) as file:
+        try:
+            with open(
+                path,
+                "r",
+                encoding="utf-8",
+            ) as file:
 
-            data = json.load(file)
+                data = json.load(file)
+        except (
+            FileNotFoundError,
+            json.JSONDecodeError,
+        ):
 
-        lane_data = data.get(
-            "lanes",
-            [],
-        )
+            return []
+
+        lane_data = data.get("lanes",[],)
+        print("lane_data =", lane_data)
+        print("lane count =", len(lane_data))
+
+        print("lane_data =", lane_data)
 
         lanes = []
 
@@ -172,6 +207,11 @@ class ScenarioIO:
                     ),
                 )
             )
+
+        print("Returning Lane objects:")
+
+        for lane in lanes:
+            print(lane)
 
         return lanes
 

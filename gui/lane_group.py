@@ -7,12 +7,12 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
 )
 
-from models.lane import LanePosition, Lane
+from models.lane import LanePosition, Lane, DISPLAY_NAMES
 
 
 class LaneGroup(QGroupBox):
 
-    def __init__(self, title):
+    def __init__(self, title, position: LanePosition):
 
         super().__init__(title)
         layout = QGridLayout(self)
@@ -21,23 +21,7 @@ class LaneGroup(QGroupBox):
 
         layout.setContentsMargins(10, 12, 10, 12)
 
-        self.position = QComboBox()
-        self.position.addItem(
-            "Closest Left",
-            LanePosition.CLOSEST_LEFT
-        )
-        self.position.addItem(
-            "Second Closest Left",
-            LanePosition.SECOND_CLOSEST_LEFT
-        )
-        self.position.addItem(
-            "Closest Right",
-            LanePosition.CLOSEST_RIGHT
-        )
-        self.position.addItem(
-            "Second Closest Right",
-            LanePosition.SECOND_CLOSEST_RIGHT
-        )
+        self.fixed_position = position
         self.a = QDoubleSpinBox()
         self.b = QDoubleSpinBox()
         self.c = QDoubleSpinBox()
@@ -63,12 +47,8 @@ class LaneGroup(QGroupBox):
         for spin in spins:
             spin.setFixedWidth(80)
 
-        self.position.setFixedWidth(100)
-
-
-
-        layout.addWidget(QLabel("Position"), 0, 0)
-        layout.addWidget(self.position,       0, 1)
+        layout.addWidget(QLabel("Position"),0,0,)
+        layout.addWidget(QLabel(DISPLAY_NAMES[position]),0,1,)
 
         layout.addWidget(QLabel("a"), 1, 0)
         layout.addWidget(self.a,      1, 1)
@@ -105,7 +85,7 @@ class LaneGroup(QGroupBox):
     def lane(self, name):
         return Lane(
             name=name,
-            position=self.position.currentData(),
+            position=self.fixed_position,
             a=self.a.value(),
             b=self.b.value(),
             c=self.c.value(),
@@ -114,6 +94,9 @@ class LaneGroup(QGroupBox):
         )
 
     def set_lane(self, lane):
+
+        print(f"Updating GUI for {lane.name}")
+
         self.a.setValue(lane.a)
         self.b.setValue(lane.b)
         self.c.setValue(lane.c)

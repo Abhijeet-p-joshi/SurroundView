@@ -8,6 +8,7 @@ from PySide6.QtWidgets import (
 
 from gui.lane_group import LaneGroup
 from injection.scenario_io import ScenarioIO
+from models.lane import LanePosition
 
 class LaneEditor(QWidget):
 
@@ -19,10 +20,25 @@ class LaneEditor(QWidget):
         self.scenario_io = ScenarioIO()
         layout = QVBoxLayout(self)
 
-        self.laneA = LaneGroup("Lane A")
-        self.laneB = LaneGroup("Lane B")
-        self.laneC = LaneGroup("Lane C")
-        self.laneD = LaneGroup("Lane D")
+        self.laneA = LaneGroup(
+            "Lane A",
+            LanePosition.SECOND_CLOSEST_LEFT,
+        )
+
+        self.laneB = LaneGroup(
+            "Lane B",
+            LanePosition.CLOSEST_LEFT,
+        )
+
+        self.laneC = LaneGroup(
+            "Lane C",
+            LanePosition.CLOSEST_RIGHT,
+        )
+
+        self.laneD = LaneGroup(
+            "Lane D",
+            LanePosition.SECOND_CLOSEST_RIGHT,
+        )
 
         layout.addWidget(self.laneA)
         layout.addWidget(self.laneB)
@@ -46,9 +62,12 @@ class LaneEditor(QWidget):
                 )
             )
         )
-        self.set_lanes(
-            self.scenario_io.load_lanes()
-        )
+        lanes = self.scenario_io.load_lanes()
+
+        print("Loaded from ScenarioIO")
+        print(lanes)
+
+        self.set_lanes(lanes)
 
     def lanes(self):
         return [
@@ -59,11 +78,23 @@ class LaneEditor(QWidget):
         ]
 
     def set_lanes(self, lanes):
+
+        print("LaneEditor.set_lanes()")
+        print(lanes)
+
         if lanes is None:
             return
         if len(lanes) != 4:
             return
+
+        print("Setting Lane A")
         self.laneA.set_lane(lanes[0])
+
+        print("Setting Lane B")
         self.laneB.set_lane(lanes[1])
+
+        print("Setting Lane C")
         self.laneC.set_lane(lanes[2])
+
+        print("Setting Lane D")
         self.laneD.set_lane(lanes[3])

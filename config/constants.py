@@ -1,5 +1,5 @@
 X_MIN = 0
-X_MAX = 13000
+X_MAX = 15000
 
 Y_MIN = -1000
 Y_MAX = 1000
