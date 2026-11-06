@@ -1,10 +1,8 @@
 from PySide6.QtWidgets import (
-    QComboBox,
     QDoubleSpinBox,
     QGridLayout,
     QGroupBox,
     QLabel,
-    QHBoxLayout,
 )
 
 from models.lane import LanePosition, Lane, DISPLAY_NAMES
@@ -38,14 +36,9 @@ class LaneGroup(QGroupBox):
 
         for spin in spins:
             spin.setDecimals(6)
-            spin.setRange(
-                -1000,
-                1000,
-            )
+            spin.setRange(-1000,1000)
             spin.setSingleStep(0.01)
-
-        for spin in spins:
-            spin.setFixedWidth(80)
+            spin.setMinimumWidth(150)
 
         layout.addWidget(QLabel("Position"),0,0,)
         layout.addWidget(QLabel(DISPLAY_NAMES[position]),0,1,)
@@ -73,11 +66,11 @@ class LaneGroup(QGroupBox):
         layout.setColumnStretch(8, 0)
 
         # Spinbox columns
-        layout.setColumnStretch(1, 0)
-        layout.setColumnStretch(3, 0)
-        layout.setColumnStretch(5, 0)
-        layout.setColumnStretch(7, 0)
-        layout.setColumnStretch(9, 0)
+        layout.setColumnStretch(1, 1)
+        layout.setColumnStretch(3, 1)
+        layout.setColumnStretch(5, 1)
+        layout.setColumnStretch(7, 1)
+        layout.setColumnStretch(9, 1)
 
         # Let any remaining space stay at the end
         layout.setColumnStretch(10, 1)

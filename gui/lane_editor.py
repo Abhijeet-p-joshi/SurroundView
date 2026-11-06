@@ -64,9 +64,6 @@ class LaneEditor(QWidget):
         )
         lanes = self.scenario_io.load_lanes()
 
-        print("Loaded from ScenarioIO")
-        print(lanes)
-
         self.set_lanes(lanes)
 
     def lanes(self):
@@ -79,22 +76,22 @@ class LaneEditor(QWidget):
 
     def set_lanes(self, lanes):
 
-        print("LaneEditor.set_lanes()")
-        print(lanes)
+        # print("LaneEditor.set_lanes()")
+        # print(lanes)
 
         if lanes is None:
             return
         if len(lanes) != 4:
             return
 
-        print("Setting Lane A")
-        self.laneA.set_lane(lanes[0])
+        # print("Setting Lane A")
+        # self.laneA.set_lane(lanes[0])
 
-        print("Setting Lane B")
-        self.laneB.set_lane(lanes[1])
+        # print("Setting Lane B")
+        # self.laneB.set_lane(lanes[1])
 
-        print("Setting Lane C")
-        self.laneC.set_lane(lanes[2])
+        # print("Setting Lane C")
+        # self.laneC.set_lane(lanes[2])
 
-        print("Setting Lane D")
-        self.laneD.set_lane(lanes[3])
+        # print("Setting Lane D")
+        # self.laneD.set_lane(lanes[3])
